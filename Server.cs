@@ -2,7 +2,9 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Policy;
 using System.Text;
+using System.Linq;
 
 namespace SimpleHTTPServer
 {
@@ -22,37 +24,50 @@ namespace SimpleHTTPServer
             {
                 TcpClient client = listener.AcceptTcpClient();
                 Console.WriteLine("Conexão estabelecida");
-
+                string hostname=Dns.GetHostName();
                 StreamReader reader = new StreamReader(client.GetStream());
                 string request = reader.ReadLine();
                 
 
                 string[] tokens = request.Split(' ');
                 string path = tokens[1];
+                string[] tokenss = path.Split('&');
+                if (tokenss.Count() > 1)
+                {
+                    string ppath = tokenss[1];
+                    string filename = ppath;
+                    Console.WriteLine(filename);
+                    //if (File.Exists(filename))
+                    //{
+                        string sssss = "";
+                        HttpWebRequest requests = (HttpWebRequest)WebRequest.Create(filename);
+                        requests.Method = "GET"; // define o método da requisição
 
-                if (path == "/")
-                {
-                    path = "\\index.html";
-                }
-                string ppath = path.Replace("/", "\\");
-                string filename = curdirs + ppath;
-                Console.WriteLine(filename);
-                if  (File.Exists(filename))
-                {
-                    FileStream fileStream = new FileStream(filename, FileMode.Open);
-                    byte[] buffer = new byte[fileStream.Length];
-                    fileStream.Read(buffer, 0, (int)fileStream.Length);
-                    fileStream.Close();
-                    string contentType = GetContentType(filename);
-                    SendResponse(client, "200 OK", contentType, buffer);
-                }
-                else
-                {
-                    string response = "404 Not Found";
-                    byte[] buffer = Encoding.UTF8.GetBytes(response);
-                    SendResponse(client, response, "text/plain", buffer);
-                }
+                        HttpWebResponse response = (HttpWebResponse)requests.GetResponse(); // faz a requisição e recebe a resposta
 
+                        // lê o conteúdo da resposta
+                        using (var streamReader = new System.IO.StreamReader(response.GetResponseStream()))
+                        {
+                            string responseText = streamReader.ReadToEnd();
+                            sssss = sssss + responseText;
+                        }
+                        sssss = sssss.Replace("https", "http://"+hostname+ "&ssss01234567890");
+                        sssss = sssss.Replace("./", "http://" + hostname + "&ssss001234567890");
+                        sssss = sssss.Replace("ssss01234567890", "https");
+                        sssss = sssss.Replace("ssss001234567890", "./");
+                        response.Close(); // fecha a conexão com o servidor
+                        string contentType = GetContentType(filename);
+                        SendResponse(client, "200 OK", contentType, Encoding.UTF8.GetBytes(sssss));
+                /*    
+                }
+                    else
+                    {
+                        string response = "404 Not Found";
+                        byte[] buffer = Encoding.UTF8.GetBytes(response);
+                        SendResponse(client, response, "text/plain", buffer);
+                    }
+                */
+                }
                 client.Close();
                 Console.WriteLine("Conexão terminada");
             }
